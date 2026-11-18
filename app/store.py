@@ -11,6 +11,13 @@ def connection():
     return db
 
 def save(run_id, body):
+    """Persist one run per source identity.
+
+    Re-running the same source (same byte content, parameters and rule version)
+    must not add a record and must not replace an already recorded conclusion:
+    the stored body and its review version/decision are kept as-is.  A later
+    adoption failure therefore cannot silently swap a signed-off conclusion.
+    """
     with connection() as db:
         db.execute('INSERT OR IGNORE INTO runs(id,body) VALUES (?,?)',(run_id,json.dumps(body,ensure_ascii=False)))
         db.execute("INSERT INTO meta(key,value) VALUES ('latest',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value",(run_id,))

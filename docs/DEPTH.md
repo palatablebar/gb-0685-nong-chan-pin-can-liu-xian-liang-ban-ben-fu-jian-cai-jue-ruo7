@@ -29,7 +29,11 @@
 | TRAP-14 | 同版冲突 | 最后覆盖 | 整组隔离 | `app/modules/m2_mapping/rules.py` | `tests/test_mapping.py::test_real_conflict_quarantine` |
 | TRAP-18 | 三种空态 | 除零或伪成功 | 三个错误码 | `app/modules/m1_ingest/reader.py` | `tests/test_ingest.py::test_empty_three_states` |
 | TRAP-26 | 旧版本复核 | 覆盖新结论 | 事务条件更新 | `app/store.py` | `tests/test_archive.py::test_stale_review` |
-| TRAP-15 | ug/kg与mg/kg | 差1000倍 | 浓度统一mg/kg | `app/modules/m4_segments/rules.py` | `tests/test_segments.py::test_unit_conversion` |
+| TRAP-15 | ug/kg与mg/kg | 差1000倍 | 浓度统一mg/kg，单位写法归一 | `app/modules/m4_segments/units.py` | `tests/test_segments.py::test_unit_conversion`、`test_unit_spellings_resolve_to_same_scale` |
+| TRAP-27 | 原检复检跨单位 | 按各自字面单位判级/要求单位写法一致才接入 | 折算mg/kg后比较统一区间 | `app/modules/m4_segments/units.py`、`app/modules/m5_calculate/rules.py` | `tests/test_calculate.py::test_cross_unit_retest_supports_one_conclusion`、`test_equal_interval_after_unit_conversion_is_not_conflict` |
+| TRAP-28 | 并列复检矛盾 | 整组丢弃或覆盖旧结论 | 采信失败以 SUPERSEDE 隔离矛盾复检、保留旧版结论并沿用其区间 | `app/modules/m5_calculate/rules.py`、`app/modules/m6_reconcile/compare.py` | `tests/test_calculate.py::test_adoption_failure_retains_previous_conclusion` |
+| TRAP-29 | 封存证据缺原始报告/隔离原因 | 仅导出结论 | 证据含原始报告、跨单位支撑与隔离原因 | `app/modules/m7_archive/export_out.py` | `tests/test_archive.py::test_archive_keeps_original_reports_and_isolation_reasons` |
+| TRAP-30 | 同源重跑 | 新增记录或改换已确认结论 | 幂等保存，已存结论不被替换 | `app/store.py` | `tests/test_archive.py::test_rerun_same_source_keeps_recorded_conclusion` |
 | TRAP-25 | 标准时间边界 | 双版或错版 | 采样日半开区间选版 | `app/modules/m3_versions/standards.py` | `tests/test_versions.py::test_halfopen_effective` |
 | TRAP-20 | 复检引用环 | 遍历无法结束 | 引用路径检测 | `app/modules/m5_calculate/rules.py` | `tests/test_calculate.py::test_cycle_rejected` |
 

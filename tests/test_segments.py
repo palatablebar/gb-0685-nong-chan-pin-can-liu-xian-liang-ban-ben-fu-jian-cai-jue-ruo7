@@ -14,3 +14,14 @@ def test_real_initial_uncertain(raw):assert run(raw,{},4)['measurements'][0]['co
 def test_real_second_pesticide_exceeds(raw):assert run(raw,{},4)['measurements'][2]['code']=='FAIL'
 def test_lod_inconsistent_rejected():
     with pytest.raises(DomainError):concentration('<0.01','mg/kg','0.02','0.005')
+
+
+def test_unit_spellings_resolve_to_same_scale():
+    # TRAP-15：μg/kg、ppb 等写法与 ug/kg 同尺度，不得因写法不同而隔离
+    from app.modules.m4_segments.units import resolve
+    from decimal import Decimal
+    for unit in ('μg/kg', 'µg/kg', 'UG/KG', 'ppb', 'ng/g'):
+        canonical, factor, shown = resolve(unit)
+        assert canonical == 'mg/kg' and factor == Decimal('.001') and shown
+    assert resolve('mg／kg')[1] == Decimal(1)
+    assert resolve('ppm')[1] == Decimal(1)

@@ -1,11 +1,12 @@
 from decimal import Decimal,InvalidOperation
 import unicodedata
 from app.errors import DomainError
+from app.modules.m4_segments.units import resolve,verdict
+
 
 def concentration(result,unit,lod,limit):
-    factors={'mg/kg':Decimal(1),'ppm':Decimal(1),'ug/kg':Decimal('.001'),'ppb':Decimal('.001')}
-    if unit not in factors:raise DomainError('UNIT','检出量单位无效')
-    factor=factors[unit];detection=Decimal(str(lod))*factor;threshold=Decimal(str(limit))
+    canonical,factor,reported_unit=resolve(unit)
+    detection=Decimal(str(lod))*factor;threshold=Decimal(str(limit))
     text=unicodedata.normalize('NFKC',str(result)).strip().upper()
     try:
         if text=='ND':lower,upper,exclusive=Decimal(0),detection,True
@@ -18,8 +19,10 @@ def concentration(result,unit,lod,limit):
             if not value.is_finite() or value<0 or value<detection:raise DomainError('RANGE','定量值低于检出限')
             lower,upper,exclusive=value,value,False
     except InvalidOperation:raise DomainError('NUMBER','检出量无法解析')
-    code='PASS' if upper<=threshold else 'FAIL' if lower>threshold else 'UNCERTAIN'
-    return {'lower':str(lower),'upper':str(upper),'upper_exclusive':exclusive,'limit':str(threshold),'code':code,'unit':'mg/kg'}
+    code=verdict(lower,upper,threshold)
+    return {'lower':str(lower),'upper':str(upper),'upper_exclusive':exclusive,'limit':str(threshold),'code':code,
+        'unit':canonical,'reported_unit':reported_unit,'unit_factor':str(factor),
+        'reported_result':str(result),'reported_lod':str(lod)}
 
 def apply(state):
     measurements=[];bad=[]
